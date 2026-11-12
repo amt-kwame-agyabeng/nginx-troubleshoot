@@ -39,9 +39,9 @@ Nomad and Consul were started in development mode for the local single-node envi
 
 The installed versions were verified using the respective CLI commands.
 
-![Consul version](screenshots/consul-version.png)
+![Consul version](screenshots/consul%20version.png)
 
-![Nomad agent running](screenshots/nomad-agent-running.png)
+![Nomad agent running](screenshots/nomad-version.png)
 
 ### Repository Structure
 
@@ -67,7 +67,7 @@ Consul was started in development mode:
 consul agent -dev
 ```
 
-![Consul agent running](screenshots/consul-agent-running.png)
+![Consul agent running](screenshots/02-consul-agent-running.png)
 
 ### 4.2 Starting Nomad
 
@@ -88,7 +88,7 @@ consul members
 
 The Nomad node was registered and ready in datacenter `dc1`.
 
-![Cluster health check](screenshots/cluster-health-check.png)
+![Cluster health check](screenshots/04-cluster-health.png)
 
 ## 5. Initial Deployment and Failure Investigation
 
@@ -104,9 +104,9 @@ The deployment failed with:
 No nodes were eligible for evaluation
 ```
 
-![Original job file](screenshots/original-job-file.png)
+![Original job file](screenshots/05-original-job-file.png)
 
-![Original deployment attempt](screenshots/original-deployment-attempt.png)
+![Original deployment attempt](screenshots/05-original-deployment-attempt.png)
 
 Further investigation using:
 
@@ -119,7 +119,7 @@ showed that the local Nomad node belonged to datacenter `dc1`, while the job con
 
 This prevented Nomad from placing the allocation on the available node.
 
-![Nomad placement failure](screenshots/nomad-placement-failure.png)
+![Nomad placement failure](screenshots/06-nomad-placement-failure.png)
 
 ### 5.1 Correcting the Datacenter
 
@@ -137,7 +137,7 @@ The configuration was corrected to:
 datacenters = ["dc1"]
 ```
 
-![Datacenter correction](screenshots/datacenter-correction.png)
+![Datacenter correction](screenshots/Datacenter%20correction.png)
 
 ## 6. Docker Image Troubleshooting
 
@@ -151,7 +151,7 @@ image = "yourdockerhubusername/nginx-app:latest"
 
 The image could not be pulled because the referenced repository did not exist or was inaccessible.
 
-![Docker image pull failure](screenshots/docker-image-pull-failure.png)
+![Docker image pull failure](screenshots/09-docker-image-pull-failure.png)
 
 ### 6.1 Building a Local Docker Image
 
@@ -163,7 +163,7 @@ docker build -t nginx-app:local .
 
 The build completed successfully.
 
-![Custom Docker image built](screenshots/custom-docker-image-built.png)
+![Custom Docker image built](screenshots/10-custom-docker-image-built.png)
 
 The Nomad Docker configuration was updated to use the local image:
 
@@ -174,13 +174,13 @@ config {
 }
 ```
 
-![Local image configuration](screenshots/local-image-configuration.png)
+![Local image configuration](screenshots/11-local-image-configuration.png)
 
 The job was redeployed, and the Nginx container started successfully.
 
-![Local image deployment](screenshots/local-image-deployment.png)
+![Local image deployment](screenshots/12-local-image-deployment.png)
 
-![Nginx container started](screenshots/nginx-container-started.png)
+![Nginx container started](screenshots/13-nginx-container-started.png)
 
 ## 7. Allocation Health and Networking Troubleshooting
 
@@ -190,7 +190,7 @@ The allocation inspection showed that traffic was being forwarded to container p
 
 The service health check also referenced `/health`, an endpoint that did not exist in the application.
 
-![Allocation health failure](screenshots/allocation-health-failure.png)
+![Allocation health failure](screenshots/14-allocation-health-failure.png)
 
 ### 7.1 Correcting the Container Port
 
@@ -240,11 +240,11 @@ check {
 }
 ```
 
-![Port and health-check fix](screenshots/port-and-health-check-fix.png)
+![Port and health-check fix](screenshots/15-port-and-health-check-fix.png)
 
 The corrected settings were verified before redeployment.
 
-![Port and health-check verification](screenshots/port-and-health-check-verification.png)
+![Port and health-check verification](screenshots/15-port-and-health-check-fix-1.png)
 
 ## 8. Docker Port Publishing Issue
 
@@ -285,9 +285,9 @@ config {
 }
 ```
 
-![Docker port publishing configuration](screenshots/docker-port-publishing-configuration.png)
+![Docker port publishing configuration](screenshots/16-docker-port-publishing-configuration.png)
 
-![Docker port publishing snippet](screenshots/docker-port-publishing-snippet.png)
+![Docker port publishing snippet](screenshots/16-docker-port-publishing-1-configuration.png)
 
 This allowed the Nomad Docker driver to publish the dynamically allocated host port and forward traffic to container port `80`.
 
@@ -364,7 +364,7 @@ The final output confirmed:
 - Healthy allocations: `1`
 - Unhealthy allocations: `0`
 
-![Successful Nomad deployment](screenshots/successful-nomad-deployment.png)
+![Successful Nomad deployment](screenshots/16-successful-nomad-deployment.png)
 
 ### 10.2 Healthy Allocation
 
@@ -380,7 +380,7 @@ The application was running with the dynamically allocated address:
 127.0.0.1:20057 -> 80
 ```
 
-![Healthy Nomad allocation](screenshots/healthy-nomad-allocation.png)
+![Healthy Nomad allocation](screenshots/17-healthy-nomad-allocation.png)
 
 ### 10.3 Nginx HTTP Verification
 
@@ -406,7 +406,7 @@ The response body contained:
 
 This confirmed that Nginx was serving the application successfully.
 
-![Nginx HTTP 200 response](screenshots/nginx-http-200-response.png)
+![Nginx HTTP 200 response](screenshots/18-nginx-http-200-response.png)
 
 ### 10.4 Consul Service Registration
 
@@ -433,7 +433,7 @@ Output: HTTP GET http://127.0.0.1:20057/: 200 OK
 
 This confirmed that Consul successfully monitored the Nginx application.
 
-![Consul service health passing](screenshots/consul-service-health-passing.png)
+![Consul service health passing](screenshots/19-consul-service-health-passing.png)
 
 ### 10.5 Browser Verification
 
@@ -445,7 +445,7 @@ http://127.0.0.1:20057/
 
 The browser successfully displayed the Nginx welcome page.
 
-![Nginx browser verification](screenshots/nginx-browser-verification.png)
+![Nginx browser verification](screenshots/20-nginx-browser-verification.png)
 
 ## 11. Summary of Issues and Resolutions
 
