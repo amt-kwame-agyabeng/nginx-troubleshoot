@@ -31,7 +31,7 @@ job "nginx-app" {
 
         check {
           type     = "http"
-          path     = "/"
+          path     = "/healthz"
           interval = "10s"
           timeout  = "2s"
         }

@@ -246,6 +246,53 @@ The corrected settings were verified before redeployment.
 
 ![Port and health-check verification](screenshots/15-port-and-health-check-fix-1.png)
 
+
+### 7.3 Implementing a Dedicated Nginx Health Endpoint
+
+Following mentor feedback, the health-check implementation was improved by creating a dedicated `/healthz` endpoint instead of relying on the application homepage.
+
+A custom Nginx configuration file named `default.conf` was created.
+
+The configuration defines a dedicated health endpoint:
+
+```nginx
+location = /healthz {
+    access_log off;
+    default_type text/plain;
+    return 200 "healthy\n";
+}
+```
+
+When Nginx receives a request to `/healthz`, it returns an HTTP 200 response with the message `healthy`.
+
+The existing homepage configuration was retained to ensure that normal application requests continued to work.
+
+![Nginx health-check configuration](screenshots/21-nginx-healthz-config.png)
+
+The custom configuration was copied into the Nginx container through the Dockerfile:
+
+```dockerfile
+COPY default.conf /etc/nginx/conf.d/default.conf
+```
+
+![Updated Dockerfile](screenshots/22-updated-dockerfile.png)
+
+The Docker image was rebuilt to include the new Nginx configuration.
+
+The Nomad service health check was also updated to use the dedicated endpoint:
+
+```hcl
+check {
+    type     = "http"
+    path     = "/healthz"
+    interval = "10s"
+    timeout  = "2s"
+}
+```
+
+![Updated Nomad health check](screenshots/23-nomad-healthz-check.png)
+
+
 ## 8. Docker Port Publishing Issue
 
 After correcting the container port and health-check endpoint, the Nginx task was running, but the application was still inaccessible through the dynamically allocated host port.
@@ -447,6 +494,35 @@ The browser successfully displayed the Nginx welcome page.
 
 ![Nginx browser verification](screenshots/20-nginx-browser-verification.png)
 
+### 10.6 Dedicated Health Endpoint Verification
+
+After implementing the custom Nginx configuration, the Docker image was rebuilt and tested locally.
+
+The `/healthz` endpoint returned HTTP 200 OK with the expected `healthy` response. The existing homepage also continued to return HTTP 200 OK.
+
+![Docker health endpoint test](screenshots/24-docker-healthz-test.png)
+
+The updated Nomad job was validated and redeployed successfully. The allocation reached a healthy state with one healthy allocation and no unhealthy allocations.
+
+The endpoint was then tested through the dynamically assigned Nomad port:
+
+```bash
+curl -i http://127.0.0.1:26304/healthz
+```
+
+The endpoint returned HTTP 200 OK with the response `healthy`.
+
+![Nomad health endpoint verification](screenshots/25-nomad-healthz-verification.png)
+
+Consul was also queried to verify the registered service and its health checks. The Nomad-managed HTTP check passed and reported:
+
+```text
+Status: passing
+Output: HTTP GET http://127.0.0.1:26304/healthz: 200 OK Output: healthy
+```
+
+![Consul health check passing](screenshots/26-consul-healthz-passing.png)
+
 ## 11. Summary of Issues and Resolutions
 
 | Issue | Root Cause | Resolution |
@@ -454,22 +530,28 @@ The browser successfully displayed the Nginx welcome page.
 | Nomad placement failure | Incorrect datacenter placeholder | Changed datacenter to `dc1` |
 | Docker image pull failure | Invalid placeholder image reference | Built and used `nginx-app:local` |
 | Incorrect container port | Port mapping targeted `81` | Changed target port to `80` |
-| Failed HTTP health check | `/health` endpoint did not exist | Changed health-check path to `/` |
+| Initial HTTP health check failure | The configured `/health` endpoint did not exist | Initially changed the health-check path to `/` |
+| Missing dedicated health endpoint | Nginx had no dedicated endpoint for health monitoring | Created `/healthz` in the custom Nginx configuration |
+| Nomad health-check configuration | Nomad was checking the homepage instead of a dedicated health endpoint | Updated the HTTP health check to use `/healthz` |
 | Application inaccessible | Docker port was not published | Added `ports = ["http"]` |
 
 ## 12. Conclusion
 
 The troubleshooting exercise successfully identified and resolved multiple configuration issues affecting the Nginx deployment.
 
-The main problems involved an incorrect Nomad datacenter, an inaccessible Docker image, an incorrect container port, a non-existent health-check endpoint, and missing Docker port publishing configuration.
+The main problems involved an incorrect Nomad datacenter, an inaccessible Docker image, an incorrect container port, an unsuitable health-check endpoint, and missing Docker port publishing configuration.
+
+Following the initial fixes and mentor feedback, a custom Nginx configuration was introduced to provide a dedicated `/healthz` endpoint.
 
 After applying the corrections:
 
 - Nomad successfully deployed the Nginx application.
 - The allocation reached a healthy state.
-- Docker published the application port.
-- Nginx returned an HTTP `200 OK` response.
-- Consul registered the service and reported a passing health check.
-- The application was successfully accessed through a web browser.
+- Docker successfully published the application port.
+- The Nginx homepage returned an HTTP `200 OK` response.
+- The dedicated `/healthz` endpoint returned HTTP `200 OK` with the response `healthy`.
+- Nomad successfully monitored the application through `/healthz`.
+- Consul confirmed that the service health check was passing.
+- The application remained accessible through a web browser.
 
-This exercise provided practical experience in troubleshooting containerized applications, inspecting Nomad allocations, understanding Docker networking, configuring service health checks, and integrating Nomad with Consul.
+This exercise provided practical experience in troubleshooting containerized applications, inspecting Nomad allocations, configuring Docker networking, implementing dedicated health endpoints, and integrating Nomad with Consul for service health monitoring.
